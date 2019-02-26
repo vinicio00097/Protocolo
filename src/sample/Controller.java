@@ -132,7 +132,7 @@ public class Controller implements Initializable {
                                 if(object instanceof String){
                                     switch (headerReceived.get(object.toString())){
                                         case "Inicio":{
-                                            System.out.println("Inició");
+                                            errorsDisplay.appendText("Mensaje entrante...\n");
                                         }break;
                                         case "Fin":{
                                             System.out.println("Finalizó");
