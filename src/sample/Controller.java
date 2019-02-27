@@ -9,6 +9,7 @@ import com.jfoenix.controls.*;
 import com.jfoenix.controls.cells.editors.TextFieldEditorBuilder;
 import com.jfoenix.controls.cells.editors.base.GenericEditableTreeTableCell;
 import com.jfoenix.controls.datamodels.treetable.RecursiveTreeObject;
+import com.jfoenix.skins.JFXButtonSkin;
 import com.sun.javafx.binding.ExpressionHelper;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -22,12 +23,16 @@ import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
+import javafx.geometry.NodeOrientation;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import javafx.util.Callback;
 import javafx.util.Duration;
 import sun.security.ssl.HandshakeInStream;
@@ -45,12 +50,13 @@ public class Controller implements Initializable {
     public JFXTreeTableView<TramaItem> tablaWord=new JFXTreeTableView<>();
     public JFXTreeTableView<TramaItem> tablaWordToSend=new JFXTreeTableView<>();
     public TextArea errorsDisplay;
-    public AnchorPane container;
+    public StackPane container;
     public JFXToggleButton onOffServer;
     public JFXToggleButton onOffClient;
+    public JFXButton editar;
     private Stack<TramaItem> missingTramas=new Stack<>();
     private Integer maxErrors=5;
-    private String word="hola somos ricardo y vinicio";
+    private String word="esto es una prueba para la clase de redes";
     private String generator="1101";
     private List<TramaItem> encodedWord=new ArrayList<>();
     private List<TramaItem> encodedWordToSend=new ArrayList<>();
@@ -149,8 +155,48 @@ public class Controller implements Initializable {
         });
 
 
+        editar.setOnAction(event -> {
+            JFXButton cancel=new JFXButton("Cancelar");
+            JFXButton ok=new JFXButton("Guardar");
+
+            List<Node> actions=new ArrayList<>();
+            actions.add(cancel);
+            actions.add(ok);
+
+            JFXDialogLayout jfxd = new JFXDialogLayout();
+            JFXTextField palabra=new JFXTextField(word);
+            jfxd.setHeading(new Text("Modificación de palabra"));
+            jfxd.setBody(palabra);
+            jfxd.setActions(actions);
+
+            JFXDialog dialog = new JFXDialog(container, jfxd, JFXDialog.DialogTransition.CENTER);
+            //dialog.getDialogContainer().setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+
+            cancel.setOnAction(event12 -> dialog.close());
+            ok.setOnAction(event1 -> {
+                if(!palabra.getText().matches("^[\\s]+$")){
+                    if(!palabra.getText().isEmpty()){
+                        groupToSend.resetAll();
+                        centralGroup.resetAll();
+                        missingTramas.clear();
+
+                        word=palabra.getText();
+                        definedWord.setText(word);
+
+                        centralGroup.setWord(encodedWord);
+                        centralGroup.doTransformation(word);
+                        initTable(tablaWord,encodedWord);
+
+                        dialog.close();
+                    }
+                }
+            });
+
+            dialog.show();
+        });
 
         send.setOnAction(event -> {
+
             if(incomingWord.getText().length()>0){
                 groupToSend.resetAll();
                 missingTramas.clear();
@@ -207,6 +253,7 @@ public class Controller implements Initializable {
             }
         });
     }
+
 
     private void initTable(JFXTreeTableView tabla,List<TramaItem> data){
         //tabla.getItems().clear();
@@ -403,7 +450,7 @@ public class Controller implements Initializable {
             newOperacion.add(trama.get(count));
         }
 
-        if(!operacion.get(operacion.size() - 1).equals("*")){
+        if(/*!operacion.get(operacion.size() - 1).equals("*")*/getBitsAmount(newOperacion)<generator.length()){
             //System.out.println(trama);
             //System.out.println(newOperacion);
             return new Object[]{true,newOperacion};
@@ -417,8 +464,8 @@ public class Controller implements Initializable {
         boolean hasOne=false;
 
 
-        System.out.println(trama);
-        System.out.println(operacion);
+        //System.out.println(trama);
+        //System.out.println(operacion);
 
         for(int count=0;count<trama.size();count++){
             if(!trama.get(count).equals("*")){
@@ -448,8 +495,8 @@ public class Controller implements Initializable {
             newOperacion.add(trama.get(count));
         }
 
-        if(!operacion.get(operacion.size() - 1).equals("*")){
-            System.out.println(trama);
+        if(getBitsAmount(newOperacion)<generator.length()){
+            //System.out.println(trama);
             System.out.println(newOperacion);
             return new Object[]{true,newOperacion};
         }else{
@@ -457,13 +504,20 @@ public class Controller implements Initializable {
         }
     }
 
+    public int getBitsAmount(List<String> trama){
+        int counter=0;
+
+        for(String item:trama){
+            if(!item.equals("*")){
+                counter++;
+            }
+        }
+
+        return counter;
+    }
+
     private List<String> prepareTrama(String trama){
         List<String> arrayTrama=new ArrayList<>();
-        if(trama.charAt(trama.length()-1)=='0'){
-            trama+="0";
-        }else{
-            trama+="1";
-        }
 
         for(int count=0;count<trama.length()+(generator.length()-1);count++){
             if(count>=trama.length()){

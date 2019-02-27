@@ -6,25 +6,31 @@
 <?import com.jfoenix.controls.JFXToggleButton?>
 <?import com.jfoenix.controls.JFXTreeTableView?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<AnchorPane fx:id="container" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="444.0" prefWidth="722.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<StackPane fx:id="container" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <VBox alignment="TOP_RIGHT" layoutX="184.0" layoutY="103.0" prefHeight="327.0" prefWidth="354.0" spacing="10.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="184.0" AnchorPane.rightAnchor="184.0" AnchorPane.topAnchor="103.0">
+      <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="444.0" prefWidth="870.0">
          <children>
-            <JFXTextArea fx:id="incomingWord" />
-            <JFXButton fx:id="send" styleClass="button-raised" text="Enviar" />
-            <JFXTextArea fx:id="errorsDisplay" editable="false" />
+            <VBox alignment="TOP_RIGHT" layoutX="269.0" layoutY="103.0" prefHeight="327.0" prefWidth="333.0" spacing="10.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="269.0" AnchorPane.rightAnchor="268.0" AnchorPane.topAnchor="103.0">
+               <children>
+                  <JFXTextArea fx:id="incomingWord" />
+                  <JFXButton fx:id="send" buttonType="RAISED" styleClass="button-raised" text="Enviar" />
+                  <JFXTextArea fx:id="errorsDisplay" editable="false" />
+               </children>
+            </VBox>
+            <JFXTextField fx:id="definedWord" editable="false" layoutX="14.0" layoutY="42.0" prefHeight="26.0" prefWidth="590.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="266.0" AnchorPane.topAnchor="42.0" />
+            <JFXTreeTableView fx:id="tablaWord" layoutX="14.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="103.0" />
+            <JFXTreeTableView fx:id="tablaWordToSend" layoutX="548.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="103.0" />
+            <VBox layoutX="696.0" prefHeight="101.0" prefWidth="160.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="0.0">
+               <children>
+                  <JFXToggleButton fx:id="onOffServer" styleClass="toggle-button" text="Servidor" />
+                  <JFXToggleButton fx:id="onOffClient" text="Cliente" />
+               </children>
+            </VBox>
+            <JFXButton styleClass="icon-button" fx:id="editar" layoutX="604.0" layoutY="39.0" text="Editar" />
          </children>
-      </VBox>
-      <JFXTextField fx:id="definedWord" editable="false" layoutX="14.0" layoutY="42.0" prefHeight="26.0" prefWidth="533.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="175.0" AnchorPane.topAnchor="42.0" />
-      <JFXTreeTableView fx:id="tablaWord" layoutX="14.0" layoutY="103.0" prefHeight="327.0" prefWidth="160.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="103.0" />
-      <JFXTreeTableView fx:id="tablaWordToSend" layoutX="548.0" layoutY="103.0" prefHeight="327.0" prefWidth="160.0" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="103.0" />
-      <VBox layoutX="548.0" layoutY="2.0" prefHeight="101.0" prefWidth="160.0">
-         <children>
-            <JFXToggleButton fx:id="onOffServer" styleClass="toggle-button" text="Servidor" />
-            <JFXToggleButton fx:id="onOffClient" text="Cliente" />
-         </children>
-      </VBox>
+      </AnchorPane>
    </children>
-</AnchorPane>
+</StackPane>
