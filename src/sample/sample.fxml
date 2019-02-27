@@ -25,11 +25,11 @@
             <JFXTreeTableView fx:id="tablaWordToSend" layoutX="548.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="103.0" />
             <VBox layoutX="696.0" prefHeight="101.0" prefWidth="160.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="0.0">
                <children>
-                  <JFXToggleButton fx:id="onOffServer" styleClass="toggle-button" text="Servidor" />
+                  <JFXToggleButton fx:id="onOffServer" text="Servidor" />
                   <JFXToggleButton fx:id="onOffClient" text="Cliente" />
                </children>
             </VBox>
-            <JFXButton styleClass="icon-button" fx:id="editar" layoutX="604.0" layoutY="39.0" text="Editar" />
+            <JFXButton fx:id="editar" layoutX="604.0" layoutY="39.0" styleClass="icon-button" text="Editar" />
          </children>
       </AnchorPane>
    </children>
