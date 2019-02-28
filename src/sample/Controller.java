@@ -58,7 +58,6 @@ public class Controller implements Initializable {
     private Stack<TramaItem> missingTramas=new Stack<>();
     private Stack<TramaItem> overTramas=new Stack<>();
     private Stack<TramaItem> wrongTramas=new Stack<>();
-    private Integer maxErrors=5;
     private String word="esto es una prueba para la clase de redes";
     private String generator="1101";
     private List<TramaItem> encodedWord=new ArrayList<>();

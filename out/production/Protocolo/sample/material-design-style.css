@@ -14,3 +14,7 @@
     -fx-background-color: rgb(120,102,204);
     -fx-text-fill: WHITE;
 }
+
+.table_style{
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 30, 0, 0, 0);
+}

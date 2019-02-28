@@ -15,18 +15,18 @@
          <children>
             <VBox alignment="TOP_RIGHT" layoutX="269.0" layoutY="103.0" prefHeight="327.0" prefWidth="333.0" spacing="10.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="269.0" AnchorPane.rightAnchor="268.0" AnchorPane.topAnchor="103.0">
                <children>
-                  <JFXTextArea fx:id="incomingWord" />
+                  <JFXTextArea fx:id="incomingWord" focusColor="#7866cc" labelFloat="true" promptText="Datos a enviar" />
                   <JFXButton fx:id="send" buttonType="RAISED" styleClass="button-raised" text="Enviar" />
-                  <JFXTextArea fx:id="errorsDisplay" editable="false" />
+                  <JFXTextArea fx:id="errorsDisplay" editable="false" focusColor="#7866cc" promptText="Log" />
                </children>
             </VBox>
-            <JFXTextField fx:id="definedWord" editable="false" layoutX="14.0" layoutY="42.0" prefHeight="26.0" prefWidth="590.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="266.0" AnchorPane.topAnchor="42.0" />
-            <JFXTreeTableView fx:id="tablaWord" layoutX="14.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="103.0" />
-            <JFXTreeTableView fx:id="tablaWordToSend" layoutX="548.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="103.0" />
+            <JFXTextField fx:id="definedWord" editable="false" focusColor="#7866cc" labelFloat="true" layoutX="14.0" layoutY="42.0" prefHeight="26.0" prefWidth="590.0" promptText="Frase definida" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="266.0" AnchorPane.topAnchor="42.0" />
+            <JFXTreeTableView styleClass="table_style" fx:id="tablaWord" layoutX="14.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="103.0" />
+            <JFXTreeTableView styleClass="table_style" fx:id="tablaWordToSend" layoutX="548.0" layoutY="103.0" prefHeight="327.0" prefWidth="240.0" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="103.0" />
             <VBox layoutX="696.0" prefHeight="101.0" prefWidth="160.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="0.0">
                <children>
-                  <JFXToggleButton fx:id="onOffServer" text="Servidor" />
-                  <JFXToggleButton fx:id="onOffClient" text="Cliente" />
+                  <JFXToggleButton fx:id="onOffServer" text="Servidor" toggleColor="#7866cc" toggleLineColor="#bcb1f8" />
+                  <JFXToggleButton fx:id="onOffClient" text="Cliente" toggleColor="#7866cc" toggleLineColor="#bcb1f8" />
                </children>
             </VBox>
             <JFXButton fx:id="editar" layoutX="604.0" layoutY="39.0" styleClass="icon-button" text="Editar" />
