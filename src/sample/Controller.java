@@ -37,6 +37,7 @@ import javafx.util.Callback;
 import javafx.util.Duration;
 import sun.security.ssl.HandshakeInStream;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URL;
@@ -55,11 +56,14 @@ public class Controller implements Initializable {
     public JFXToggleButton onOffClient;
     public JFXButton editar;
     private Stack<TramaItem> missingTramas=new Stack<>();
+    private Stack<TramaItem> overTramas=new Stack<>();
+    private Stack<TramaItem> wrongTramas=new Stack<>();
     private Integer maxErrors=5;
     private String word="esto es una prueba para la clase de redes";
     private String generator="1101";
     private List<TramaItem> encodedWord=new ArrayList<>();
     private List<TramaItem> encodedWordToSend=new ArrayList<>();
+    private List<TramaItem> encodedWordReceived=new ArrayList<>();
     private BinaryTransmission centralGroup=new BinaryTransmission();
     private BinaryTransmission groupToSend=new BinaryTransmission();
     private Tooltip tooltip=new Tooltip("No hay nada a enviar, debe contener por lo menos un caracter.");
@@ -70,6 +74,7 @@ public class Controller implements Initializable {
     private Kryo kryoServer=server.getKryo();
     private Kryo kryoClient=client.getKryo();
     private HashMap<String,String> headerReceived;
+    private StringBuilder crcSteps;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -100,9 +105,8 @@ public class Controller implements Initializable {
                         @Override
                         public void received(Connection connection, Object object) {
                             super.received(connection, object);
-                            if(object instanceof String[]){
-                                String[] tramaReceived=(String[]) object;
-                                System.out.println(tramaReceived[0]+" "+tramaReceived[1]+" "+tramaReceived[2]);
+                            if(object instanceof String){
+                                errorsDisplay.appendText("Respuesta de cliente "+connection.getID()+": "+object+"\n");
                             }
                         }
                     });
@@ -126,22 +130,76 @@ public class Controller implements Initializable {
                         super.received(connection, object);
                         if(object instanceof String[]){
                             String[] tramaReceived=(String[]) object;
-                            List<String> preparedTrama=prepareTramaReceived(tramaReceived[1]);
-                            Object[] response=doCRC2(preparedTrama,prepareOperacion(generator,preparedTrama));
 
-                            System.out.println(tramaReceived[0]+" "+tramaReceived[1]+" "+tramaReceived[2]);
+                            if(!headerReceived.containsKey(tramaReceived[1])){
+                                List<String> preparedTrama=prepareTramaReceived(tramaReceived[1]);
+                                Object[] response=doCRC2(preparedTrama,prepareOperacion(generator,preparedTrama));
+
+                                if(Boolean.valueOf(response[0].toString())){
+                                    int charCode = Integer.parseInt(tramaReceived[1].substring(0,tramaReceived[1].length()-3), 2);
+                                    String letra = Character.toString((char)charCode);
+
+                                    TramaItem newTrama=new TramaItem(
+                                            new SimpleStringProperty(tramaReceived[0]),
+                                            new SimpleStringProperty(tramaReceived[1].substring(0,tramaReceived[1].length()-3)),
+                                            new SimpleStringProperty(letra),
+                                            new SimpleStringProperty(tramaReceived[2])
+                                    );
+
+                                    encodedWordReceived.add(newTrama);
+
+                                    if(!isValid((List<String>) response[1])){
+                                        wrongTramas.push(newTrama);
+                                    }
+                                }
+                            }else{
+                                encodedWordReceived.add(new TramaItem(
+                                        new SimpleStringProperty(" "),
+                                        new SimpleStringProperty(tramaReceived[1]),
+                                        new SimpleStringProperty(" "),
+                                        new SimpleStringProperty(" ")
+                                ));
+                            }
                         }else{
                             if(object instanceof HashMap){
                                 headerReceived=(HashMap<String, String>) object;
-                                System.out.println(headerReceived.get(" "));
+                                errorsDisplay.appendText("Header recibido.\n");
                             }else {
                                 if(object instanceof String){
                                     switch (headerReceived.get(object.toString())){
                                         case "Inicio":{
-                                            errorsDisplay.appendText("Mensaje entrante...\n");
+                                            missingTramas.clear();
+                                            overTramas.clear();
+                                            encodedWordReceived.clear();
+                                            crcSteps=new StringBuilder();
+
+                                            errorsDisplay.appendText("Mensaje entrante de: "+connection.getRemoteAddressTCP()+"\n");
                                         }break;
                                         case "Fin":{
-                                            System.out.println("Finalizó");
+                                            if(wrongTramas.size()>0){
+                                                client.sendTCP(headerReceived.get("No"));
+                                            }else{
+                                                validate(encodedWord,encodedWordReceived,0,0);
+                                                if(missingTramas.size()==0&&overTramas.size()==0){
+                                                    errorsDisplay.appendText("Mensaje recibido correcto: "+getMessage()+"\n\n");
+                                                    client.sendTCP(headerReceived.get("Si"));
+                                                }else{
+                                                    if(missingTramas.size()>0){
+                                                        if(overTramas.size()>0){
+                                                            errorsDisplay.appendText("Error, tramas faltantes: \n"+getMissingTramas());
+                                                            errorsDisplay.appendText("Error, tramas de más: \n"+getOverTramas()+"\n\n");
+                                                        }else{
+                                                            errorsDisplay.appendText("Error, tramas faltantes: \n"+getMissingTramas()+"\n\n");
+                                                        }
+                                                    }else{
+                                                        errorsDisplay.appendText("Error, tramas de más: \n"+getOverTramas()+"\n\n");
+                                                    }
+
+                                                    client.sendTCP(headerReceived.get("No"));
+                                                }
+                                            }
+
+                                            printToFile(crcSteps,"valicaciónCRC.txt");
                                         }break;
                                     }
                                 }
@@ -170,15 +228,16 @@ public class Controller implements Initializable {
             jfxd.setActions(actions);
 
             JFXDialog dialog = new JFXDialog(container, jfxd, JFXDialog.DialogTransition.CENTER);
-            //dialog.getDialogContainer().setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
 
             cancel.setOnAction(event12 -> dialog.close());
             ok.setOnAction(event1 -> {
                 if(!palabra.getText().matches("^[\\s]+$")){
                     if(!palabra.getText().isEmpty()){
+                        tablaWordToSend.setRoot(new TreeItem<>());
                         groupToSend.resetAll();
                         centralGroup.resetAll();
                         missingTramas.clear();
+                        overTramas.clear();
 
                         word=palabra.getText();
                         definedWord.setText(word);
@@ -200,47 +259,38 @@ public class Controller implements Initializable {
             if(incomingWord.getText().length()>0){
                 groupToSend.resetAll();
                 missingTramas.clear();
+                overTramas.clear();
                 groupToSend.setWord(encodedWordToSend);
                 groupToSend.doTransformation(incomingWord.getText());
 
                 initTableToSend(tablaWordToSend,encodedWordToSend);
 
-                if(validate(encodedWord,encodedWordToSend,0,0)){
 
-                    server.sendToAllTCP(centralGroup.getSpecialOperations());
-                    server.sendToAllTCP(centralGroup.getSpecialOperations().get("Inicio"));
-                    for(TramaItem tramaItem:encodedWordToSend){
-                        System.out.println(tramaItem.getWordIndex());
-                        if(!tramaItem.getTramaIndex().equals(" ")){
-                            List<String> preparedTrama=prepareTrama(tramaItem.getBinaryLetter());
-                            Object[] response=doCRC(preparedTrama,prepareOperacion(generator,preparedTrama));
+                server.sendToAllTCP(centralGroup.getSpecialOperations());
+                server.sendToAllTCP(centralGroup.getSpecialOperations().get("Inicio"));
+                for(TramaItem tramaItem:encodedWordToSend){
+                    System.out.println(tramaItem.getWordIndex());
+                    if(!tramaItem.getTramaIndex().equals(" ")){
+                        List<String> preparedTrama=prepareTrama(tramaItem.getBinaryLetter());
+                        Object[] response=doCRC(preparedTrama,prepareOperacion(generator,preparedTrama));
 
-                            if(Boolean.valueOf(response[0].toString())){
-                                tramaItem.setBinaryLetter(tramaItem.getBinaryLetter()+doComplement((ArrayList<String>)response[1]));
+                        if(Boolean.valueOf(response[0].toString())){
+                            tramaItem.setBinaryLetter(tramaItem.getBinaryLetter()+doComplement((ArrayList<String>)response[1]));
 
-                                if(server.getConnections().length>0){
-                                    server.sendToAllTCP(new String[]{tramaItem.getWordIndex(),tramaItem.getBinaryLetter(),tramaItem.getTramaIndex()});
-                                }
+                            if(server.getConnections().length>0){
+                                server.sendToAllTCP(new String[]{tramaItem.getWordIndex(),tramaItem.getBinaryLetter(),tramaItem.getTramaIndex()});
                             }
                         }
-                    }
-
-                    server.sendToAllTCP(centralGroup.getSpecialOperations().get("Fin"));
-                    errorsDisplay.appendText(incomingWord.getText()+"\n");
-                }else{
-                    StringBuilder errorMsg=new StringBuilder("Error, tramas faltantes: \n");
-
-                    if(missingTramas.size()>0){
-                        for(TramaItem item:missingTramas){
-                            errorMsg.append(item.getWordIndex()).append(" ").append(item.getBinaryLetter()).append(" ").append(item.getTramaIndex()).append("\n");
-                        }
-
-
-                        errorsDisplay.appendText(errorMsg.toString());
                     }else{
-                        errorsDisplay.appendText("Error, sobrecarga de cadena a enviar. \n");
+                        if(server.getConnections().length>0){
+                            server.sendToAllTCP(new String[]{tramaItem.getWordIndex(),tramaItem.getBinaryLetter(),tramaItem.getTramaIndex()});
+                        }
                     }
                 }
+
+                server.sendToAllTCP(centralGroup.getSpecialOperations().get("Fin"));
+                errorsDisplay.appendText("Enviado: "+incomingWord.getText()+"\n");
+
             }else{
                 tooltip.hide();
                 tooltip.setStyle("-fx-background-color:red");
@@ -357,9 +407,6 @@ public class Controller implements Initializable {
         if(index2==groupToSend.size()){
             missingTramas.add(centralGroup.get(index1));
 
-            if(missingTramas.size()>=maxErrors){
-                return false;
-            }
             if(index1<=centralGroup.size()){
                 index1++;
             }
@@ -367,12 +414,14 @@ public class Controller implements Initializable {
             if(!centralGroup.get(index1).getBinaryLetter().equals(groupToSend.get(index2).getBinaryLetter())){
                 missingTramas.push(centralGroup.get(index1));
 
-                if(missingTramas.size()>=maxErrors){
-                    return false;
-                }
-
-                if(centralGroup.get(index1+1).getTramaIndex().equals(" ")){
-                    index1+=getSpaceAmount(index1+1,0);
+                if((index1+1)<centralGroup.size()){
+                    if(centralGroup.get(index1+1).getTramaIndex().equals(" ")){
+                        index1+=getSpaceAmount(index1+1,0);
+                    }else{
+                        if(index1<=centralGroup.size()){
+                            index1++;
+                        }
+                    }
                 }else{
                     if(index1<=centralGroup.size()){
                         index1++;
@@ -389,7 +438,11 @@ public class Controller implements Initializable {
         }
 
         if(index1==centralGroup.size()){
-            return index2 == groupToSend.size();
+            for(int count=index1;count<groupToSend.size();count++){
+                overTramas.add(groupToSend.get(count));
+            }
+
+            return true;
         }else{
             if(index2==groupToSend.size()){
                 return validate(centralGroup,groupToSend,index1,index2);
@@ -464,6 +517,7 @@ public class Controller implements Initializable {
         boolean hasOne=false;
 
 
+        crcSteps.append(trama).append("\n").append(operacion).append("\n");
         //System.out.println(trama);
         //System.out.println(operacion);
 
@@ -497,6 +551,7 @@ public class Controller implements Initializable {
 
         if(getBitsAmount(newOperacion)<generator.length()){
             //System.out.println(trama);
+            crcSteps.append(newOperacion).append("\n\n");
             System.out.println(newOperacion);
             return new Object[]{true,newOperacion};
         }else{
@@ -504,7 +559,7 @@ public class Controller implements Initializable {
         }
     }
 
-    public int getBitsAmount(List<String> trama){
+    private int getBitsAmount(List<String> trama){
         int counter=0;
 
         for(String item:trama){
@@ -514,6 +569,20 @@ public class Controller implements Initializable {
         }
 
         return counter;
+    }
+
+    private boolean isValid(List<String> residuo){
+        boolean isValid=true;
+
+        for(String item:residuo){
+            if(!item.equals("*")){
+                if(Integer.parseInt(item)>0){
+                    isValid=!isValid;
+                }
+            }
+        }
+
+        return isValid;
     }
 
     private List<String> prepareTrama(String trama){
@@ -572,5 +641,47 @@ public class Controller implements Initializable {
         }
 
         return returnStatement.toString();
+    }
+
+    private String getMissingTramas(){
+        StringBuilder stringBuilder=new StringBuilder();
+
+        for(TramaItem item:missingTramas){
+            stringBuilder.append(item.getWordIndex()).
+                    append(" ").append(item.getBinaryLetter()).append(" ").append(item.getTramaIndex()).append("\n");
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private String getOverTramas(){
+        StringBuilder stringBuilder=new StringBuilder();
+
+        for(TramaItem item:overTramas){
+            stringBuilder.append(item.getWordIndex()).
+                    append(" ").append(item.getBinaryLetter()).append(" ").append(item.getTramaIndex()).append("\n");
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private String getMessage(){
+        StringBuilder stringBuilder=new StringBuilder();
+
+        for(TramaItem item:encodedWordReceived){
+            stringBuilder.append(item.getLetter());
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private void printToFile(StringBuilder crcSteps,String filename){
+        try {
+            FileWriter fileWriter = new FileWriter(filename);
+            fileWriter.write(crcSteps.toString());
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
