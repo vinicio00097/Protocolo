@@ -105,7 +105,7 @@ public class Controller implements Initializable {
                         public void received(Connection connection, Object object) {
                             super.received(connection, object);
                             if(object instanceof String){
-                                errorsDisplay.appendText("Respuesta de cliente "+connection.getID()+": "+object+"\n");
+                                errorsDisplay.appendText("Respuesta de cliente "+connection.getID()+": "+object+" - "+centralGroup.getSpecialOperations().get(object)+"\n");
                             }
                         }
                     });
@@ -470,10 +470,6 @@ public class Controller implements Initializable {
         List<String> newOperacion=new ArrayList<>();
         boolean hasOne=false;
 
-
-        //System.out.println(trama);
-        //System.out.println(operacion);
-
         for(int count=0;count<trama.size();count++){
             if(!trama.get(count).equals("*")){
                 if(!operacion.get(count).equals("*")){
@@ -502,9 +498,7 @@ public class Controller implements Initializable {
             newOperacion.add(trama.get(count));
         }
 
-        if(/*!operacion.get(operacion.size() - 1).equals("*")*/getBitsAmount(newOperacion)<generator.length()){
-            //System.out.println(trama);
-            //System.out.println(newOperacion);
+        if(getBitsAmount(newOperacion)<generator.length()){
             return new Object[]{true,newOperacion};
         }else{
             return doCRC(newOperacion,prepareOperacion(generator,newOperacion));
@@ -517,8 +511,6 @@ public class Controller implements Initializable {
 
 
         crcSteps.append(trama).append("\n").append(operacion).append("\n");
-        //System.out.println(trama);
-        //System.out.println(operacion);
 
         for(int count=0;count<trama.size();count++){
             if(!trama.get(count).equals("*")){
@@ -549,7 +541,6 @@ public class Controller implements Initializable {
         }
 
         if(getBitsAmount(newOperacion)<generator.length()){
-            //System.out.println(trama);
             crcSteps.append(newOperacion).append("\n\n");
             System.out.println(newOperacion);
             return new Object[]{true,newOperacion};
