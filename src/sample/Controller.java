@@ -222,7 +222,7 @@ public class Controller implements Initializable {
 
             JFXDialogLayout jfxd = new JFXDialogLayout();
             JFXTextField palabra=new JFXTextField(word);
-            jfxd.setHeading(new Text("Modificación de palabra"));
+            jfxd.setHeading(new Text("Modificación de frase"));
             jfxd.setBody(palabra);
             jfxd.setActions(actions);
 
